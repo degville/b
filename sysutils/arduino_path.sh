@@ -4,11 +4,7 @@ arduino_bin=$(readlink -f `which arduino`)
 arduino_path=$(dirname "$arduino_bin")
 
 if [ -d "$arduino_path" ]; then
-	if [ -f "$arduino_path/arduino-builder" ]; then
-		echo "$arduino_path/arduino-builder"
-	else
-		exit 1
-	fi
+	echo "$arduino_path"
 else
-	exit 2
+	exit 1
 fi

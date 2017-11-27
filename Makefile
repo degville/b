@@ -1,18 +1,17 @@
 ifeq ($(OS),Windows_NT)
-	ARDUINO_BUILDER = $(shell "sysutils/arduino_builder.cmd")
+	ARDUINO_PATH = $(shell "sysutils/arduino_path.cmd")
 	MKDIR = mkdir $(subst /,\,$(1)) > nul 2>&1 || (exit 0)
 	RM = $(wordlist 2,65535,$(foreach FILE,$(subst /,\,$(1)),& del /f /q $(FILE) > nul 2>&1)) || (exit 0)
 	RMDIR = rmdir $(subst /,\,$(1)) > nul 2>&1 || (exit 0)
 	ECHO = @echo $(1)
 else
-	ARDUINO_BUILDER = $(shell "sysutils/arduino_builder.sh")
+	ARDUINO_PATH = $(shell "sysutils/arduino_path.sh")
 	MKDIR = mkdir -p $(1)
 	RM = rm -f $(1) > /dev/null 2>&1 || true
 	RMDIR = rmdir $(1) > /dev/null 2>&1 || true
 	ECHO = @echo $(1)
 endif
 
-ARDUINO_PATH = $(subst /arduino-builder,,$(ARDUINO_BUILDER))
 ARDUINO_PATH_UNQUOTED = $(subst ",,$(ARDUINO_PATH))
 
 ifeq ($(ARDUINO_PATH),)
@@ -21,6 +20,7 @@ endif
 
 ARDUINO_PROJECT := $(wildcard *.ino)
 
+ARDUINO_BUILDER = "$(ARDUINO_PATH_UNQUOTED)/arduino-builder"
 ARDUINO_HARDWARE := "$(ARDUINO_PATH_UNQUOTED)/hardware"
 ARDUINO_TOOLS_BUILDER := "$(ARDUINO_PATH_UNQUOTED)/tools-builder"
 ARDUINO_TOOLS_HARDWARE_AVR := "$(ARDUINO_PATH_UNQUOTED)/hardware/tools/avr"
