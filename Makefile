@@ -1,30 +1,46 @@
 ifeq ($(OS),Windows_NT)
-	ARDUINO_PATH = ${ProgramFiles(x86)}\Arduino
+	ARDUINO_BUILDER = $(shell "sysutils/arduino_builder.cmd")
 	MKDIR = mkdir $(subst /,\,$(1)) > nul 2>&1 || (exit 0)
 	RM = $(wordlist 2,65535,$(foreach FILE,$(subst /,\,$(1)),& del /f /q $(FILE) > nul 2>&1)) || (exit 0)
 	RMDIR = rmdir $(subst /,\,$(1)) > nul 2>&1 || (exit 0)
 	ECHO = @echo $(1)
 else
-	ARDUINO_BIN = $(shell readlink -f `which arduino`)
-	ARDUINO_PATH = $(shell dirname "$(ARDUINO_BIN)")
+	ARDUINO_BUILDER = $(shell "sysutils/arduino_builder.sh")
 	MKDIR = mkdir -p $(1)
 	RM = rm -f $(1) > /dev/null 2>&1 || true
 	RMDIR = rmdir $(1) > /dev/null 2>&1 || true
-	ECHO = @echo "$(1)"
+	ECHO = @echo $(1)
+endif
+
+ARDUINO_PATH = $(subst /arduino-builder,,$(ARDUINO_BUILDER))
+ARDUINO_PATH_UNQUOTED = $(subst ",,$(ARDUINO_PATH))
+
+ifeq ($(ARDUINO_PATH),)
+	$(error Arduino path not found)
 endif
 
 ARDUINO_PROJECT := $(wildcard *.ino)
+
+ARDUINO_HARDWARE := "$(ARDUINO_PATH_UNQUOTED)/hardware"
+ARDUINO_TOOLS_BUILDER := "$(ARDUINO_PATH_UNQUOTED)/tools-builder"
+ARDUINO_TOOLS_HARDWARE_AVR := "$(ARDUINO_PATH_UNQUOTED)/hardware/tools/avr"
+ARDUINO_LIBRARIES := "$(ARDUINO_PATH_UNQUOTED)/libraries"
+
+BUILD_DIR := "$(CURDIR)/build"
+BUILD_LIBRARIES := "$(CURDIR)/libraries"
+
+FQBN="arduino:avr:uno"
 
 all: build/$(ARDUINO_PROJECT).hex
 
 build/%.ino.hex: %.ino
 	$(call MKDIR,build libraries)
-	"$(ARDUINO_PATH)/arduino-builder" -compile -logger=machine -hardware "$(ARDUINO_PATH)/hardware" -tools "$(ARDUINO_PATH)/tools-builder" -tools "$(ARDUINO_PATH)/hardware/tools/avr" -built-in-libraries "$(ARDUINO_PATH)/libraries" -libraries "$(CURDIR)/libraries" -fqbn=arduino:avr:uno -ide-version=10607 -build-path "$(CURDIR)/build" -warnings=none -prefs=build.warn_data_percentage=80 -verbose "$(CURDIR)/$<"
+	$(ARDUINO_BUILDER) -compile -logger=machine -hardware $(ARDUINO_HARDWARE) -tools $(ARDUINO_TOOLS_BUILDER) -tools $(ARDUINO_TOOLS_HARDWARE_AVR) -built-in-libraries $(ARDUINO_LIBRARIES) -libraries $(BUILD_LIBRARIES) -fqbn=$(FQBN) -ide-version=10607 -build-path $(BUILD_DIR) -warnings=none -prefs=build.warn_data_percentage=80 -verbose "$(CURDIR)/$<"
 
 clean:
 	$(call RM,build/core/* build/libraries/EEPROM/* build/libraries/* build/preproc/* build/sketch/* build/* libraries/*)
 	$(call RMDIR,build/core build/libraries/EEPROM build/libraries build/preproc build/sketch build libraries)
 
 test:
-	$(call ECHO,$(CURDIR))
+	$(call ECHO,$(ARDUINO_BUILDER))
 	$(call ECHO,$(ARDUINO_PATH))
