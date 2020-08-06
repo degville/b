@@ -19,6 +19,7 @@
 # The original version of this file can be found at https://github.com/pauldreik/arduino-due-makefile
 # By Paul Dreik 20130503 http://www.pauldreik.se/
 
+ADIR:=$(HOME)/.arduino15
 
 
 # Which serial port to use 
@@ -31,17 +32,24 @@ SPEED = 19200
 VERIFY = -v
 
 # Locations of tools
-CXX = 		../tools/gcc-arm-none-eabi-4.8.3-2014q1/bin/arm-none-eabi-g++
-CC = 		../tools/gcc-arm-none-eabi-4.8.3-2014q1/bin/arm-none-eabi-gcc
+# CXX = 		arm-none-eabi-g++
+# CC = 		arm-none-eabi-gcc
+CC:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-gcc
+CXX:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-g++
+OBJCOPY:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-objcopy
+
 C = 		$(CC)
-SAM = 		../arduino/sam
-CMSIS = 	../arduino/sam/system/CMSIS
-LIBSAM = 	../arduino/sam/system/libsam
+SAM:=           $(ADIR)/packages/arduino/hardware/sam/1.6.12
+CMSIS =         $(SAM)/system/CMSIS
+LIBSAM = 	$(SAM)/system/libsam
 TMPDIR = 	./build
 BINDIR =	./bin
-AR = 		../tools/gcc-arm-none-eabi-4.8.3-2014q1/bin/arm-none-eabi-ar 
-OBJCOPY =  	../tools/gcc-arm-none-eabi-4.8.3-2014q1/bin/arm-none-eabi-objcopy
+# AR = 		arm-none-eabi-ar 
+# OBJCOPY =  	arm-none-eabi-objcopy
+# AR :=           $(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-objcopy
 
+AR:=$(ADIR)/tools/g++_arm_none_eabi/bin/arm-none-eabi-ar 
+AR:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-ar
 
 
 # Defines
@@ -50,7 +58,7 @@ DEFINES:=-Dprintf=iprintf -DF_CPU=84000000L -DARDUINO=152 -D__SAM3X8E__ -DUSB_PI
 # Includes
 INCLUDES = 	-Isrc -Isrc/devices -Isrc/util -Isrc/drivers -I$(LIBSAM) -I$(CMSIS)/CMSIS/Include/ -I$(CMSIS)/Device/ATMEL/ \
 			-I$(SAM)/cores/arduino -I$(SAM)/variants/arduino_due_x -I$(SAM)/libraries/SPI -I$(SAM)/libraries/Wire \
-			-Isrc/drivers/usbhost -Isrc/drivers/usbhost -Isrc/libraries 
+			-I$(SAM)/libraries/HID -Isrc/drivers/usbhost -Isrc/drivers/usbhost -Isrc/libraries 
 
 # Compilation flags common to both c and c++
 COMMON_FLAGS = -g -Os -w -ffunction-sections -fdata-sections -nostdlib --param max-inline-insns-single=500 -mcpu=cortex-m3  -mthumb
@@ -117,8 +125,11 @@ OBJFILES = $(addsuffix .o,$(addprefix $(TMPDIR)/,$(notdir $(SRCFILES))))
 
 #These source files are the ones forming core.a
 CORESRCXX = $(shell ls ${SAM}/cores/arduino/*.cpp ${SAM}/cores/arduino/USB/*.cpp ${SAM}/variants/arduino_due_x/variant.cpp )  \
-			${SAM}/libraries/SPI/SPI.cpp								\
-			${SAM}/libraries/Wire/Wire.cpp
+			${SAM}/libraries/SPI/src/SPI.cpp								\
+			${SAM}/libraries/Wire/src/Wire.cpp \
+			${SAM}/libraries/HID/src/HID.cpp \
+
+                       
 
 CORESRC = $(shell ls ${SAM}/cores/arduino/*.c )
 
@@ -154,15 +165,16 @@ $(foreach src,$(SRCFILES), $(eval $(call OBJ_template,$(src),$(addsuffix .o,$(ad
 
 
 clean:
-	test ! -d $(TMPDIR) || rm -rf $(TMPDIR)
+	test ! -d $(TMPDIR) || rm -rf $(TMPDIR) $(BINDIR)
 
 .PHONY: upload default
 
 $(TMPDIR):
-	mkdir -p $(TMPDIR)
+	mkdir -p {$(TMPDIR), $(BINDIR)}
 
 $(TMPDIR)/core:
 	mkdir -p $(TMPDIR)/core
+	mkdir -p $(BINDIR)
 
 # Include the dependencies for our own files
 -include $(OBJFILES:.o=.d)
@@ -189,7 +201,7 @@ $(TMPDIR)/core.a: $(TMPDIR)/core $(COREOBJS) $(COREOBJSXX)
 	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/wiring_pulse.cpp.o 
 	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/UARTClass.cpp.o 
 	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/main.cpp.o 
-	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/cxxabi-compat.cpp.o 
+#	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/cxxabi-compat.cpp.o 
 	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/Stream.cpp.o 
 	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/RingBuffer.cpp.o 
 	$(AR) rcs $(TMPDIR)/core.a $(TMPDIR)/core/IPAddress.cpp.o 
