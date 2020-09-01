@@ -48,6 +48,8 @@ void nw2s::initializeFirmware()
 {
 	aJsonObject* program = openProgram("DEFAULT.B");
 	
+	Serial.println("Entering initializeFirmware");
+
 	/* See if it's a loader */
 	aJsonObject* loaderNode = aJson.getObjectItem(program, "loader"); 
 

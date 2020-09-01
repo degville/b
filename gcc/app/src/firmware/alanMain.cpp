@@ -20,6 +20,8 @@
 
 #include <EventManager.h>
 #include <ShiftRegister.h>
+#include <SPI.h>
+
 
 using namespace nw2s;
 
