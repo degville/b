@@ -39,7 +39,7 @@ CXX:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-
 OBJCOPY:=$(ADIR)/packages/arduino/tools/arm-none-eabi-gcc/4.8.3-2014q1/bin/arm-none-eabi-objcopy
 
 C = 		$(CC)
-SAM:=           $(ADIR)/packages/arduino/hardware/sam/1.6.12
+SAM:=           $(ADIR)/packages/arduino/hardware/sam/1.6.11
 CMSIS =         $(SAM)/system/CMSIS
 LIBSAM = 	$(SAM)/system/libsam
 TMPDIR = 	./build
@@ -57,7 +57,7 @@ DEFINES:=-Dprintf=iprintf -DF_CPU=84000000L  -DARDUINO=10813 -D__SAM3X8E__ -DUSB
 
 # Includes
 INCLUDES = 	-Isrc -Isrc/devices -Isrc/util -Isrc/drivers -I$(LIBSAM) -I$(CMSIS)/CMSIS/Include/ -I$(CMSIS)/Device/ATMEL/ \
-		-I$(SAM)/cores/arduino -I$(SAM)/variants/arduino_due_x -I$(SAM)/libraries/SPI -I$(SAM)/libraries/Wire \
+		-I$(SAM)/cores/arduino -I$(SAM)/variants/arduino_due_x -I$(SAM)/libraries/SPI/src -I$(SAM)/libraries/Wire/src \
 		-I$(SAM)/libraries/HID -Isrc/drivers/usbhost -Isrc/drivers/usbhost -Isrc/libraries 
 
 # Compilation flags common to both c and c++
